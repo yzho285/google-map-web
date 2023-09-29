@@ -38,7 +38,7 @@ export default {
                     position: {lat: 43.653226, lng: -79.3831843}}],
             data:"",
             zoom:8,
-            googleMapAPI:"AIzaSyAYIhhJ30QsV0PtqhEiw2200KorkbsPsp0",
+            googleMapAPI:"YOUR_GOOGLE_API",
     
         }
     },
