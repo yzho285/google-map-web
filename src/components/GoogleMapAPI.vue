@@ -1,9 +1,9 @@
 <template>
     <GoogleMap
-    api-key="AIzaSyAYIhhJ30QsV0PtqhEiw2200KorkbsPsp0"
+    :api-key="googleMapAPI"
     style="width: 100%; height: 500px"
     :center="center"
-    :zoom="8"
+    :zoom="zoom"
     id="map"
     >
     <MarkerCluster>
@@ -11,9 +11,9 @@
     </MarkerCluster>
     </GoogleMap>
 
-    <button @click="push">push</button>
     <button @click="getUserLocation">Get Current Location</button>
-    <input @keyup.enter="fetchData" v-model="searchLocation">
+    <input @keyup.enter="search" v-model="searchLocation">
+    <button @click="search">Search Location</button>
 </template>
 
 <script>
@@ -24,65 +24,59 @@ export default {
     components: { GoogleMap, Marker, MarkerCluster, axios},
     data() {
         return { 
-            center:{ lat: 40.689247, lng: -74.044502 },
+            center:{ lat: 43.761664, lng: -79.3706496 },
             searchLocation:"",
             userLocation:{value:""},
-            markers:[
-            { lat: 40.689247, lng: -74.044502 }
-            ],
-            data:""
+            markers:[],
+            data:"",
+            zoom:8,
+            googleMapAPI:"YOUR_GOOGLE_MAP_API"
         }
     },
     methods:{
         getUserLocation() {
             // Use the Geolocation API to get the user's current location
-            // console.log(navigator);
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(position => {
                     this.userLocation.value = {
                         lat: position.coords.latitude,
                         lng: position.coords.longitude
                     };
+                    this.zoom = 16;
                     this.addMarker(this.userLocation.value, 'You are here');
-                    // map.setCenter(this.userLocation.value);
                 });
             }
         },
         addMarker() {
-            const map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 8,
-                center: this.userLocation.value,
-            });
-            // console.log(map);
-            const marker = new google.maps.Marker({
-                position: this.userLocation.value,
-                map,
-                title: "title"
-            });
+            // const map = new google.maps.Map(document.getElementById("map"), {
+            //     zoom: 8,
+            //     center: this.userLocation.value,
+            // });
+            // // console.log(map);
+            // const marker = new google.maps.Marker({
+            //     position: this.userLocation.value,
+            //     map,
+            //     title: "title"
+            // });
             // console.log(this.userLocation.value);
+            this.center = this.userLocation.value;
             this.markers.push(this.userLocation.value);
-            // console.log(marker);
-            // this.markers.value.push(marker);
             console.log(this.markers);
         },
-        async fetchData() {
-            const url = "https://maps.googleapis.com/maps/api/geocode/json?address="+this.searchLocation+"&key=AIzaSyAYIhhJ30QsV0PtqhEiw2200KorkbsPsp0"
+        async search() {
+            const url = "https://maps.googleapis.com/maps/api/geocode/json?address="+this.searchLocation+"&key="+this.googleMapAPI;
             try {
-            const response = await axios.get(url); // Replace with your API endpoint
+            const response = await axios.get(url);
             this.data = response.data;
-            console.log(this.data.results[0].geometry.location);
-            this.markers.push(this.data.results[0].geometry.location);
+            this.zoom = 16;
+            const cordinator = this.data.results[0].geometry.location;
+            this.center = cordinator;
+            // console.log(this.data.results[0].geometry.location);
+            this.markers.push(cordinator);
             } catch (error) {
             console.error('Error fetching data:', error);
       }
         },
-        push(){
-            this.markers.push({ lat: 43, lng: -80 });
-            console.log(this.markers);
-        },
-        callbackFunction(place) {
-            console.log(place);
-        }
     }
 }
 </script>
