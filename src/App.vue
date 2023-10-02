@@ -12,9 +12,9 @@
     </GoogleMap>
 
     <el-button @click="getUserLocation">Get Current Location</el-button>    
-    <el-input @keyup.enter="search" v-model="searchLocation" />
+    <el-input @keyup.enter="search" v-model="searchLocation" placeholder="Please input" />
     <el-button @click="search">Search Location</el-button>
-    <!-- <Table /> -->
+    <div>{{ timeZoneName }}</div><div>{{ localTime }}</div>
     <el-table 
         :data="markers.slice((currentPage - 1) * pageSize, currentPage * pageSize)" 
         style="width: 100%" 
@@ -54,11 +54,14 @@ export default {
             markers:[],
             data:"",
             zoom:8,
-            googleMapAPI:"YOUR_GOOGLE_API",
+            googleMapAPI:"YOUR_GOOGLE_MAP_API",
             currentPage:1,
             pageSize:10,
             total: 0,
             dataonLineListSelections: [],
+            timeZoneName:"",
+            localTime:"",
+            timeZoneId:""
     
         }
     },
@@ -77,6 +80,7 @@ export default {
                     this.zoom = 16;
                     this.addMarker(this.userLocation.value, 'You are here');
                     this.total = this.markers.length;
+                    this.getTimeZone();
                 });
             }
         },
@@ -102,10 +106,11 @@ export default {
             try {
             const response = await axios.get(url);
             const data = response.data;
-            // console.log(data);
+            console.log(data);
             this.zoom = 16;
             const cordinator = data.results[0].geometry.location;
             this.center = cordinator;
+            this.getTimeZone();
             const marker = {position:data.results[0].geometry.location, 
                             place_id:data.results[0].place_id,
                             formatted_address:data.results[0].formatted_address};
@@ -131,6 +136,26 @@ export default {
         deleteLocation(){
             const selectPlaceID = this.selectedArr.map(item => item.place_id);
             this.markers = this.markers.filter(marker => !selectPlaceID.includes(marker.place_id) )
+        },
+        async getTimeZone(){
+            const url = "https://maps.googleapis.com/maps/api/timezone/json?location="+this.center.lat+"%2C"+this.center.lng+"&timestamp=1331161200&key="+this.googleMapAPI;
+            const response = await axios.get(url);
+            const data = response.data;
+            console.log(data);
+            this.timeZoneName = data.timeZoneName;
+            this.timeZoneId = data.timeZoneId;
+
+            const options = {
+            timeZone: this.timeZoneId,
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+            };
+
+            this.localTime = new Date().toLocaleTimeString([], options);
+            console.log(this.localTime);
+
         }
     }
 }
