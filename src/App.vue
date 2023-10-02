@@ -19,7 +19,8 @@
         :data="markers.slice((currentPage - 1) * pageSize, currentPage * pageSize)" 
         style="width: 100%" 
         :key="markers.place_id"
-        @selection-change="selectionLineChangeHandle">
+        @selection-change="selectionLineChangeHandle"
+        >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="place_id" label="place_id" width="180" />
         <el-table-column prop="formatted_address" label="formatted_address" />
@@ -39,7 +40,6 @@
 <script>
 import { GoogleMap, Marker, MarkerCluster } from 'vue3-google-map'
 import axios from 'axios';
-// import Table from './components/Table.vue'
 
 export default {
     components: { GoogleMap, Marker, MarkerCluster, axios},
@@ -48,9 +48,6 @@ export default {
             center:{ lat: 43.761664, lng: -79.3706496 },
             searchLocation:"",
             userLocation:{value:""},
-            // markers:[{formatted_address: "Toronto, ON, Canada",
-            //         place_id: "ChIJpTvG15DL1IkRd8S0KlBVNTI",
-            //         position: {lat: 43.653226, lng: -79.3831843}}],
             markers:[],
             data:"",
             zoom:8,
@@ -85,28 +82,17 @@ export default {
             }
         },
         addMarker() {
-            // const map = new google.maps.Map(document.getElementById("map"), {
-            //     zoom: 8,
-            //     center: this.userLocation.value,
-            // });
-            // // console.log(map);
-            // const marker = new google.maps.Marker({
-            //     position: this.userLocation.value,
-            //     map,
-            //     title: "title"
-            // });
-            // console.log(this.userLocation.value);
             this.center = this.userLocation.value;
-            const marker = {position:this.userLocation.value}
+            const marker = {position:this.userLocation.value};
             this.markers.push(marker);
-            // console.log(this.markers);
+
         },
         async search() {
+            //use Google Map API to get location details
             const url = "https://maps.googleapis.com/maps/api/geocode/json?address="+this.searchLocation+"&key="+this.googleMapAPI;
             try {
             const response = await axios.get(url);
             const data = response.data;
-            console.log(data);
             this.zoom = 16;
             const cordinator = data.results[0].geometry.location;
             this.center = cordinator;
@@ -119,7 +105,6 @@ export default {
                 this.markers.push(marker);
             }
             this.total = this.markers.length;
-            // console.log(this.markers);
             } catch (error) {
             console.error('Error fetching data:', error);
             }
@@ -138,10 +123,10 @@ export default {
             this.markers = this.markers.filter(marker => !selectPlaceID.includes(marker.place_id) )
         },
         async getTimeZone(){
+            //use Google Map TimeZone API to get timeZone details
             const url = "https://maps.googleapis.com/maps/api/timezone/json?location="+this.center.lat+"%2C"+this.center.lng+"&timestamp=1331161200&key="+this.googleMapAPI;
             const response = await axios.get(url);
             const data = response.data;
-            console.log(data);
             this.timeZoneName = data.timeZoneName;
             this.timeZoneId = data.timeZoneId;
 
@@ -154,18 +139,9 @@ export default {
             };
 
             this.localTime = new Date().toLocaleTimeString([], options);
-            console.log(this.localTime);
 
         }
     }
 }
 </script>
 
-<!-- <style scoped>
-.example-pagination-block + .example-pagination-block {
-  margin-top: 10px;
-}
-.example-pagination-block .example-demonstration {
-  margin-bottom: 16px;
-}
-</style> -->
