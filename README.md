@@ -31,4 +31,4 @@ npm run build
 
 ### Before run the web
 
-substitue YOUR_GOOGLE_MAP_API in GoogleMapAPI.vue with you goole map api
+substitue YOUR_GOOGLE_MAP_API in APP.vue with you goole map api
