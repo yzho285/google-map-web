@@ -11,14 +11,29 @@
     </MarkerCluster>
     </GoogleMap>
 
-    <button @click="getUserLocation">Get Current Location</button>
-    <input @keyup.enter="search" v-model="searchLocation">
-    <button @click="search">Search Location</button>
+    <el-button @click="getUserLocation">Get Current Location</el-button>    
+    <el-input @keyup.enter="search" v-model="searchLocation" />
+    <el-button @click="search">Search Location</el-button>
     <!-- <Table /> -->
-    <el-table :data="markers" style="width: 100%" :key="markers.place_id">
-    <el-table-column prop="place_id" label="place_id" width="180" />
-    <el-table-column prop="formatted_address" label="formatted_address" />
-  </el-table>
+    <el-table 
+        :data="markers.slice((currentPage - 1) * pageSize, currentPage * pageSize)" 
+        style="width: 100%" 
+        :key="markers.place_id"
+        @selection-change="selectionLineChangeHandle">
+        <el-table-column type="selection" width="55" />
+        <el-table-column prop="place_id" label="place_id" width="180" />
+        <el-table-column prop="formatted_address" label="formatted_address" />
+    </el-table>
+    <el-button @click="deleteLocation">Delete</el-button>
+    <el-pagination
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
+      :page-sizes="[10, 20, 30, 40]"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total"
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+    />
 </template>
 
 <script>
@@ -33,14 +48,22 @@ export default {
             center:{ lat: 43.761664, lng: -79.3706496 },
             searchLocation:"",
             userLocation:{value:""},
-            markers:[{formatted_address: "Toronto, ON, Canada",
-                    place_id: "ChIJpTvG15DL1IkRd8S0KlBVNTI",
-                    position: {lat: 43.653226, lng: -79.3831843}}],
+            // markers:[{formatted_address: "Toronto, ON, Canada",
+            //         place_id: "ChIJpTvG15DL1IkRd8S0KlBVNTI",
+            //         position: {lat: 43.653226, lng: -79.3831843}}],
+            markers:[],
             data:"",
             zoom:8,
             googleMapAPI:"YOUR_GOOGLE_API",
+            currentPage:1,
+            pageSize:10,
+            total: 0,
+            dataonLineListSelections: [],
     
         }
+    },
+    created(){
+        this.total = this.markers.length;
     },
     methods:{
         getUserLocation() {
@@ -53,6 +76,7 @@ export default {
                     };
                     this.zoom = 16;
                     this.addMarker(this.userLocation.value, 'You are here');
+                    this.total = this.markers.length;
                 });
             }
         },
@@ -71,26 +95,52 @@ export default {
             this.center = this.userLocation.value;
             const marker = {position:this.userLocation.value}
             this.markers.push(marker);
-            console.log(this.markers);
+            // console.log(this.markers);
         },
         async search() {
             const url = "https://maps.googleapis.com/maps/api/geocode/json?address="+this.searchLocation+"&key="+this.googleMapAPI;
             try {
             const response = await axios.get(url);
             const data = response.data;
-            console.log(data);
+            // console.log(data);
             this.zoom = 16;
             const cordinator = data.results[0].geometry.location;
             this.center = cordinator;
             const marker = {position:data.results[0].geometry.location, 
                             place_id:data.results[0].place_id,
                             formatted_address:data.results[0].formatted_address};
-            this.markers.push(marker);
-            console.log(this.markers);
+            const place_ids = this.markers.map(item => item.place_id);
+            if(!place_ids.includes(marker.place_id)){
+                this.markers.push(marker);
+            }
+            this.total = this.markers.length;
+            // console.log(this.markers);
             } catch (error) {
             console.error('Error fetching data:', error);
             }
         },
+        handleSizeChange(val){
+            this.pageSize = val;
+        },
+        handleCurrentChange(val){
+            this.currentPage = val;
+        },
+        selectionLineChangeHandle(val){
+            this.selectedArr = val;
+        },
+        deleteLocation(){
+            const selectPlaceID = this.selectedArr.map(item => item.place_id);
+            this.markers = this.markers.filter(marker => !selectPlaceID.includes(marker.place_id) )
+        }
     }
 }
 </script>
+
+<!-- <style scoped>
+.example-pagination-block + .example-pagination-block {
+  margin-top: 10px;
+}
+.example-pagination-block .example-demonstration {
+  margin-bottom: 16px;
+}
+</style> -->
